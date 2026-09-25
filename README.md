@@ -16,6 +16,7 @@
 Every time you start a new AI session, you re-paste hundreds or thousands of tokens of context. Token Buster solves this:
 
 - **Auto-watches** your project directory for file changes after each AI edit
+- Tracks changes to `.env` and environment-specific `.env.*` files without storing their contents
 - **Logs every prompt/response** with before-and-after diffs and token counts
 - **Generates a compact context log** — a single copy-pasteable block that gives the AI 100% context in 10–20% of the tokens
 - **Dashboard** to track usage, costs, and savings across all your projects
