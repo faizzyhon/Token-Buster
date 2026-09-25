@@ -38,10 +38,24 @@ WATCHED_EXTENSIONS = {
 
 def _should_watch(path: str) -> bool:
     p = Path(path)
-    for part in p.parts:
-        if part.startswith(".") or part in {"node_modules", "__pycache__", "dist", "build", ".git"}:
+    is_env_file = _is_dotenv_file(p)
+
+    # Dotenv files are hidden files rather than files with a normal extension.
+    # Keep ignoring other hidden files and all hidden directories.
+    if p.name.startswith(".") and not is_env_file:
+        return False
+
+    for part in p.parts[:-1]:
+        if part.startswith(".") or part in {"node_modules", "__pycache__", "dist", "build"}:
             return False
-    return p.suffix.lower() in WATCHED_EXTENSIONS
+
+    return is_env_file or p.suffix.lower() in WATCHED_EXTENSIONS
+
+
+def _is_dotenv_file(path: Path) -> bool:
+    """Return whether a path is a dotenv file (including environment variants)."""
+    name = path.name.lower()
+    return name == ".env" or name.startswith(".env.")
 
 
 class ChangeHandler(FileSystemEventHandler):
@@ -80,7 +94,8 @@ class ChangeHandler(FileSystemEventHandler):
                 file_path=path,
                 event_type=event_type,
                 token_count=token_count,
-                content_snapshot=content[:2000],  # Store first 2000 chars
+                # Dotenv files often contain credentials; never persist their contents.
+                content_snapshot="" if _is_dotenv_file(Path(path)) else content[:2000],
             )
 
             if self.on_change:
